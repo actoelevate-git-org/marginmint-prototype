@@ -1,6 +1,9 @@
 import { Download, PackageSearch } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import type { ReactNode } from "react";
+import { OrderSourceTabs, ORDER_SOURCES, type OrderSource } from "@/components/orders/order-source-tabs";
+import { SyncedOrdersView } from "@/components/orders/synced-orders-view";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -18,13 +21,25 @@ import { marketplaceFilterLabel } from "@/lib/marketplaces";
 import { globalFilterQuery, parseEnum, parseGlobalFilters, parsePage, parseSearchText, parseSort, type SearchParams } from "@/lib/search-params";
 import { hrefWith } from "@/lib/url";
 import { listOrders, ORDER_SORT_KEYS, ORDER_STATUS_LABEL } from "@/services/orders";
+import { connectedProviders } from "@/services/integrations/connected";
 import { getCurrentWorkspace } from "@/services/workspace";
 
 export const metadata: Metadata = { title: "Orders" };
 const PATH = "/orders";
 
+export const dynamic = "force-dynamic";
+
 export default async function OrdersPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams;
+  const connected = await connectedProviders();
+  // Default to synced orders once a marketplace is connected; demo data otherwise.
+  const source = parseEnum<OrderSource>(params.source, ORDER_SOURCES, connected.length > 0 ? "synced" : "demo");
+  const tabs = <OrderSourceTabs params={params} source={source} />;
+  if (source === "synced") return <SyncedOrdersView params={params} sourceTabs={tabs} connected={connected} />;
+  return <DemoOrdersView params={params} sourceTabs={tabs} />;
+}
+
+function DemoOrdersView({ params, sourceTabs }: { params: SearchParams; sourceTabs: ReactNode }) {
   const workspace = getCurrentWorkspace();
   const filters = parseGlobalFilters(params, workspace.today);
   const status = parseEnum<OrderStatus | "ALL">(params.status, ["ALL", ...ORDER_STATUSES], "ALL");
@@ -36,7 +51,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
     <div className="space-y-5">
       <PageHeader
         title="Orders"
-        description={`${marketplaceFilterLabel(filters.marketplace)} · ${describeRange(filters.range)}. Customer references are synthetic; no personal data is stored.`}
+        description={`Demo data · ${marketplaceFilterLabel(filters.marketplace)} · ${describeRange(filters.range)}. Simulated orders; customer references are synthetic.`}
         actions={
           <a href={`/api/reports/orders?${globalFilterQuery(filters).toString()}`} className={buttonVariants({ variant: "secondary" })} download>
             <Download aria-hidden="true" />
@@ -44,6 +59,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
           </a>
         }
       />
+      {sourceTabs}
       <Card>
         <div className="flex flex-col gap-3 border-b border-line px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
           <TabLinks

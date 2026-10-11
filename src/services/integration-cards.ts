@@ -3,9 +3,9 @@ import type { DemoDataset } from "@/data/demo/types";
 import { formatInstantIst } from "@/lib/dates";
 
 /**
- * Integration status registry. Provider adapters do not exist yet, so external
- * marketplaces are reported as not connected. Nothing here claims a live
- * connection that has not been authenticated.
+ * Static cards for data sources that are not live marketplace connections
+ * (demo data, CSV, Shopify placeholder). Amazon and Flipkart status is computed
+ * from stored connections in `services/integrations/status.ts`.
  */
 export type IntegrationStatus = "active" | "not-connected" | "planned";
 
@@ -24,11 +24,6 @@ export type IntegrationCard = {
 };
 
 export function getIntegrations(dataset: DemoDataset = demoDataset): IntegrationCard[] {
-  const notConnected = (name: string): IntegrationCard["action"] => ({
-    kind: "unavailable",
-    label: `Connect ${name}`,
-    reason: "Requires the official API (OAuth) and credentials configured on the server. The adapter is not built yet, so MarginMint cannot connect.",
-  });
   return [
     {
       id: "demo",
@@ -42,37 +37,19 @@ export function getIntegrations(dataset: DemoDataset = demoDataset): Integration
       action: { kind: "link", label: "View overview", href: "/overview" },
     },
     {
-      id: "amazon",
-      name: "Amazon Seller Central",
-      kind: "marketplace",
-      status: "not-connected",
-      statusLabel: "Not connected",
-      description: "Orders, settlement reports, FBA inventory and sponsored-ads data via the Selling Partner API.",
-      dataTypes: ["Orders", "Settlements", "Inventory", "Advertising"],
-      lastSync: "Never",
-      action: notConnected("Amazon"),
-    },
-    {
-      id: "flipkart",
-      name: "Flipkart Seller Hub",
-      kind: "marketplace",
-      status: "not-connected",
-      statusLabel: "Not connected",
-      description: "Orders, payments and returns through Flipkart's seller APIs.",
-      dataTypes: ["Orders", "Settlements", "Returns"],
-      lastSync: "Never",
-      action: notConnected("Flipkart"),
-    },
-    {
       id: "shopify",
       name: "Shopify",
       kind: "marketplace",
       status: "not-connected",
-      statusLabel: "Not connected",
+      statusLabel: "Not available yet",
       description: "Orders, products and payouts from your Shopify store via the Admin API.",
       dataTypes: ["Orders", "Products", "Payouts"],
       lastSync: "Never",
-      action: notConnected("Shopify"),
+      action: {
+        kind: "unavailable",
+        label: "Connect Shopify",
+        reason: "The Shopify adapter is not built yet. Amazon and Flipkart connections are available above.",
+      },
     },
     {
       id: "csv-import",
