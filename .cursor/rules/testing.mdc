@@ -1,0 +1,28 @@
+---
+description: Testing and verification requirements for MarginMint
+globs: "**/*.{test,spec}.{ts,tsx},**/tests/**,**/e2e/**,**/playwright/**"
+alwaysApply: false
+---
+
+# Testing & Verification
+
+## What to test
+
+- **Unit tests** for financial and inventory calculations (domain module is mandatory coverage).
+- Edge cases, invalid inputs, and failure paths—not only happy paths.
+- Settlement matching and duplicate detection.
+- Authorization and workspace isolation (user A cannot read/write user B’s workspace).
+- **Integration tests** for critical service + database operations once persistence exists.
+- **Playwright** (or the repo’s e2e runner) for important end-to-end flows when configured.
+
+## How to verify
+
+- Run the relevant test, lint, typecheck, and build scripts that exist in `package.json` (or equivalent). Do not invent commands.
+- Never claim tests passed unless they actually ran successfully in this environment.
+- Fix root causes; do not suppress failures with skips or weaker assertions without documenting why.
+- Avoid tests that only mirror implementation details; assert business-observable behavior.
+- Update tests when business behavior changes; delete obsolete assertions rather than commenting them out.
+
+## Reporting
+
+- Report what was run, pass/fail, and any unresolved issues honestly in the task summary.

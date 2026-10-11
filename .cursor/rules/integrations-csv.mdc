@@ -1,0 +1,30 @@
+---
+description: Marketplace integrations and CSV import/export standards
+globs: "**/integrations/**,**/imports/**,**/exports/**,**/*csv*,**/*adapter*,**/*marketplace*,**/*sync*,**/*webhook*"
+alwaysApply: false
+---
+
+# Integrations & CSV
+
+## Marketplace adapters
+
+- Use provider-specific adapter interfaces (Amazon, Flipkart, Shopify, etc.) behind a shared port; do not scatter provider logic in UI.
+- Use authorized APIs and documented OAuth/token flows only.
+- Never ask users for marketplace account passwords.
+- Never claim a connection is live unless authentication and the relevant operations have been verified in this environment.
+- Clearly distinguish **demo**, **imported**, and **synchronized** data in storage and UI.
+
+## CSV import
+
+- Validate headers, types, dates, currencies, and required fields before commit.
+- Preview and validate rows; report counts: valid, invalid, skipped, duplicate.
+- Support column mapping when marketplace exports differ.
+- Apply file-size and row-count limits; reject oversized files safely.
+- Make imports transactional where appropriate; handle partial failures without corrupting prior good data.
+- Prevent duplicate transactions on repeated imports (stable external IDs + uniqueness).
+- Preserve import provenance (source file, adapter, timestamp) and useful per-row error details.
+
+## CSV export & reconciliation
+
+- Protect against CSV formula injection on export (escape leading `=`, `+`, `-`, `@`).
+- Never silently reconcile ambiguous financial transactions; record matching methods and audit manual changes.

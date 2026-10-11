@@ -1,0 +1,35 @@
+---
+description: Database, authz, and security requirements for MarginMint
+alwaysApply: true
+---
+
+# Database & Security (Critical)
+
+## Stack
+
+- Prefer **Prisma + PostgreSQL** when introducing persistence. If the repo later chooses differently, update this rule and `AGENTS.md`—do not run two ORMs.
+- Use safe Prisma/query APIs; never concatenate untrusted input into raw SQL. Parameterize any raw queries.
+
+## Authorization
+
+- Enforce **workspace-level access control** on every protected operation (reads and writes).
+- Never trust client-supplied `workspaceId` (or similar) without verifying membership/role server-side.
+- Return safe auth errors (401/403) without leaking whether a resource exists across workspaces.
+
+## Secrets and data handling
+
+- Never expose secrets, API keys, or DB credentials to browser bundles; use server-only env vars.
+- Do not log passwords, tokens, session secrets, or unnecessary PII.
+- Treat uploads and imported content as untrusted (size limits, type checks, no blind eval of CSV formulas).
+
+## Data integrity
+
+- Add database constraints and indexes where appropriate (unique import keys, FKs, workspace-scoped uniqueness).
+- Use transactions for multi-step financial and inventory changes.
+- Protect against duplicate imports and repeated idempotent operations (idempotency keys / unique constraints).
+- Maintain audit logs for important financial and inventory mutations.
+
+## Development hygiene
+
+- Do not weaken auth, RLS/workspace checks, or secret handling to make local development easier.
+- Handle auth failures explicitly; never catch-and-ignore authorization errors.

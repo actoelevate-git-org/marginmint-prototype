@@ -1,0 +1,35 @@
+---
+description: Global MarginMint development standards
+alwaysApply: true
+---
+
+# MarginMint — Global Standards
+
+MarginMint is an e-commerce seller operations and profit intelligence SaaS. Every change must protect financial correctness, workspace isolation, and a premium B2B experience.
+
+## Before editing
+
+- Read surrounding code, types, and related tests before changing behavior.
+- Reuse existing components, hooks, utilities, and domain modules; do not duplicate.
+- Follow the established layering in `architecture.mdc` once application code exists.
+- Prefer extending existing patterns over introducing new frameworks or abstractions.
+
+## Change discipline
+
+- Keep diffs focused on the requested task; avoid drive-by refactors.
+- Never silently remove or weaken existing functionality; call out intentional removals.
+- Avoid unnecessary dependencies and parallel implementations of the same concern.
+- Document significant architectural decisions (ADR note, PR description, or `AGENTS.md` update).
+
+## Completeness and honesty
+
+- Never leave fake buttons, dead links, or incomplete interactions without an explicit explanation in the UI or PR.
+- Never hardcode production business metrics (live GMV, margins, fee rates, or KPIs) as static demo values in product paths.
+- Never claim an integration, test, import, migration, or operation succeeded without verifying it ran successfully.
+- After substantive changes, run the relevant typecheck, lint, unit, and/or e2e commands that exist in the repo and report results honestly.
+
+## Code quality
+
+- Write maintainable, readable, type-safe code aligned with `typescript.mdc`.
+- Financial math follows `financial-logic.mdc`; security follows `database-security.mdc`.
+- Detailed rules live in `.cursor/rules/`; keep this file as the always-on checklist.

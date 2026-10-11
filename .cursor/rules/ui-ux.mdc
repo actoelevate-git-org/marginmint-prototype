@@ -1,0 +1,35 @@
+---
+description: MarginMint UI/UX and visual identity
+globs: "**/*.{tsx,jsx,css,scss}"
+alwaysApply: false
+---
+
+# UI / UX — MarginMint
+
+## Visual identity
+
+- Premium B2B SaaS quality inspired by Stripe and Linear: calm, precise, information-first.
+- Surfaces: white and slate; accents: forest green and emerald. Avoid purple-glow or decorative noise.
+- Consistent spacing scale, typography hierarchy, borders, and iconography across the app.
+- No unnecessary gradients, excessive rounded cards, or decorative clutter.
+- Financial dashboards should be readable and information-dense without visual clutter.
+
+## Layout and responsiveness
+
+- Support desktop, tablet, and mobile; prioritize dense desktop analytics layouts without breaking small screens.
+- Keep tables, filters, forms, charts, and status indicators visually consistent across features.
+
+## Accessibility and feedback
+
+- Provide accessible labels, keyboard navigation, and sufficient contrast.
+- Do not use color as the only indicator of financial status (pair with text, icons, or patterns).
+- Include loading, empty, error, and success states for data-driven views.
+- Prefer skeletons where they improve perceived loading for dashboards and tables.
+- Add tooltips for unfamiliar financial terminology (contribution profit, settlement difference, COGS, etc.).
+- Provide useful confirmation and validation feedback on destructive or irreversible actions.
+
+## Data and interactions
+
+- Use realistic demo data (INR amounts, plausible SKUs, marketplace-like order IDs).
+- Every visible action must have a real, appropriate behavior—or be explicitly disabled with an explanation.
+- Distinguish demo vs imported vs synced data in the UI when those modes coexist.

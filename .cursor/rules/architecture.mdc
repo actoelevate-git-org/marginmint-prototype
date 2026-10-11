@@ -1,0 +1,50 @@
+---
+description: MarginMint application architecture and layering
+globs: "**/*.{ts,tsx,js,jsx}"
+alwaysApply: false
+---
+
+# Architecture
+
+Follow the repository’s actual framework and conventions once they exist. Until then, establish clear layers and do not invent a second architecture alongside the first.
+
+## Layers
+
+Keep these boundaries separate:
+
+| Layer | Responsibility |
+|-------|----------------|
+| UI | Presentation, local UI state, accessibility, loading/empty/error states |
+| Application / services | Use-cases, orchestration, authorization checks |
+| Domain | Financial formulas, inventory rules, matching policies |
+| Repositories | Persistence contracts; no business formulas |
+| Database | Prisma/SQL access only inside repositories (or designated data layer) |
+
+- UI must not contain authoritative financial calculations.
+- Repositories must not call UI or embed fee/profit formulas.
+- Prefer feature modules with clear public exports over deep cross-feature imports.
+
+## Contracts and validation
+
+- Define typed service and repository interfaces (inputs/outputs explicit).
+- Share API request/response types between client and server where the stack allows; keep a single source of truth.
+- Centralize validation (e.g. Zod schemas) and map failures to consistent error shapes.
+- Validate all untrusted input on the server; client validation is UX only.
+
+## Structure guidelines
+
+- Reuse shared UI primitives; keep feature-specific components inside the feature.
+- Avoid oversized components: split when a file mixes fetching, domain math, and dense presentation.
+- Avoid unnecessary abstraction (no generic “BaseManager” layers without a second real use).
+- Avoid circular dependencies; depend inward toward domain, not outward toward UI.
+- Use async safely: handle cancellation/race conditions on navigations; never leave unhandled rejections in services.
+
+## Example boundary
+
+```typescript
+// ✅ UI calls a service; service uses domain + repository
+const summary = await profitService.getWorkspaceSummary(workspaceId, range);
+
+// ❌ UI computes contribution profit with raw JS numbers
+const profit = order.total - order.cogs - order.fees;
+```

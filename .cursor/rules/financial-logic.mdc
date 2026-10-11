@@ -1,0 +1,44 @@
+---
+description: Authoritative MarginMint financial calculation standards
+alwaysApply: true
+---
+
+# Financial Logic (Critical)
+
+## Money representation
+
+- Never use JavaScript floating-point (`number`) as the authoritative money calculation method.
+- Use an established decimal library (e.g. decimal.js / Prisma `Decimal` / major-units integer policy) consistently; pick one approach and document it.
+- Store currency code and precision explicitly. Default demo currency: **INR**.
+- Centralize formulas in a tested domain module (e.g. `domain/finance` or equivalent). Never duplicate formulas in React components.
+
+## Metric definitions (initial policy)
+
+Use these unless a more precise domain policy is documented:
+
+- **Net sales** = eligible gross item sales − discounts − cancelled item value, per order-state and refund policies.
+- **Gross profit** = net sales − cost of goods sold.
+- **Contribution profit** = net sales − COGS − applicable variable fees − fulfillment/shipping − other attributable variable costs.
+- **Operating net profit** = contribution profit − advertising − other recorded operating expenses.
+- **Net profit margin** = operating net profit / net sales × 100 when net sales ≠ 0; otherwise null/undefined—never divide by zero silently.
+
+These simplified formulas do not cover every marketplace case. Document treatment of refunds, recovered inventory, taxes, settlement adjustments, and expenses whenever implementing them.
+
+## Accounting boundaries
+
+- Keep **order/commerce records** separate from **settlement cash movements**.
+- Never treat settlement payouts as new sales.
+- Avoid double-counting fees, refunds, shipping, advertising, and returns.
+- Keep tax treatment explicit and configurable (inclusive vs exclusive; recoverable vs expense).
+- Missing cost data is **unknown**, not zero, unless a documented business rule explicitly permits zero.
+- Surfaces must show when profit is **estimated** or **incomplete**.
+- Define and document sign conventions for debits, credits, fees, refunds, and settlement differences; apply them consistently in domain code.
+
+## Adjustments and audit
+
+- Maintain audit history for manual financial adjustments (who, when, before/after, reason).
+- Never silently reconcile ambiguous financial transactions; record matching method and require explicit confirmation for manual overrides.
+
+## Required tests
+
+Cover at least: zero denominators, negative profit, partial refunds, rounding at currency precision, missing COGS/fees, settlement vs sales separation, and duplicate fee application.
