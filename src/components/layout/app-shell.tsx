@@ -25,7 +25,7 @@ export function AppShell({
       >
         Skip to content
       </a>
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col bg-forest-950 lg:flex">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col bg-forest-950 lg:flex print:!hidden">
         <div className="px-5 pb-1 pt-4">
           <Logo />
         </div>
@@ -36,7 +36,7 @@ export function AppShell({
         </div>
         <SidebarFooter />
       </aside>
-      <div className="min-w-0 lg:pl-60">
+      <div className="min-w-0 lg:pl-60 print:!pl-0">
         <TopBar workspaceName={workspaceName} lastSyncedLabel={lastSyncedLabel} today={today} dataStartDay={dataStartDay} />
         <main id="main" className="mx-auto max-w-[1440px] px-4 pb-12 pt-5 lg:px-6">
           {children}

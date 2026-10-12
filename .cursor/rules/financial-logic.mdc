@@ -3,7 +3,7 @@ description: Authoritative MarginMint financial calculation standards
 alwaysApply: true
 ---
 
-# Financial Logic (Critical)
+# Financial logic (critical)
 
 ## Money representation
 
@@ -38,6 +38,16 @@ These simplified formulas do not cover every marketplace case. Document treatmen
 
 - Maintain audit history for manual financial adjustments (who, when, before/after, reason).
 - Never silently reconcile ambiguous financial transactions; record matching method and require explicit confirmation for manual overrides.
+
+## Implemented policies (keep consistent; see docs/04-financial-logic.md)
+
+- Money = integer paise in `Money` (`src/domain/money.ts`) with `decimal.js`, ROUND_HALF_UP; INR uses Indian digit grouping.
+- Business days are IST day keys (`src/lib/dates.ts`); ranges are whole inclusive days.
+- % change = (current − previous) ÷ |previous| × 100; margin changes are percentage points; no comparison when the prior period predates recorded history or the base is zero.
+- Returns are recognised on the return date: refund + return shipping − cost of stock recovered.
+- Order shipping is allocated to lines with the largest-remainder method (parts sum exactly).
+- Shared overhead (no marketplace) is never allocated to marketplaces or products; show it as its own row.
+- Provider amounts are parsed from strings/numbers to 2 dp Decimals; missing → `null`, never 0.
 
 ## Required tests
 

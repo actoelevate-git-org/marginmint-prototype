@@ -3,7 +3,7 @@ description: Global MarginMint development standards
 alwaysApply: true
 ---
 
-# MarginMint — Global Standards
+# Global standards
 
 MarginMint is an e-commerce seller operations and profit intelligence SaaS. Every change must protect financial correctness, workspace isolation, and a premium B2B experience.
 
@@ -11,7 +11,7 @@ MarginMint is an e-commerce seller operations and profit intelligence SaaS. Ever
 
 - Read surrounding code, types, and related tests before changing behavior.
 - Reuse existing components, hooks, utilities, and domain modules; do not duplicate.
-- Follow the established layering in `architecture.mdc` once application code exists.
+- Follow the established layering in `architecture.mdc` (UI → services → domain / adapters / repositories).
 - Prefer extending existing patterns over introducing new frameworks or abstractions.
 
 ## Change discipline
@@ -27,6 +27,12 @@ MarginMint is an e-commerce seller operations and profit intelligence SaaS. Ever
 - Never hardcode production business metrics (live GMV, margins, fee rates, or KPIs) as static demo values in product paths.
 - Never claim an integration, test, import, migration, or operation succeeded without verifying it ran successfully.
 - After substantive changes, run the relevant typecheck, lint, unit, and/or e2e commands that exist in the repo and report results honestly.
+
+## Keep the project honest and current
+
+- Demo, imported and synced data must always be labelled; never mix demo and real records in one list.
+- When behaviour, commands, env vars or architecture change, update `AGENTS.md`, the relevant `docs/` page and these rules in the same change (see `documentation.mdc`).
+- Remove dead code and unused dependencies instead of leaving them "for later".
 
 ## Code quality
 

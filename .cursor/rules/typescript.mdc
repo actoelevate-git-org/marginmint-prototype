@@ -4,11 +4,12 @@ globs: "**/*.{ts,tsx}"
 alwaysApply: false
 ---
 
-# TypeScript Standards
+# TypeScript standards
 
 ## Strictness
 
-- Keep TypeScript strict mode enabled; do not loosen `tsconfig` to hide problems.
+- Keep TypeScript strict mode (incl. `noUncheckedIndexedAccess`) enabled; do not loosen `tsconfig` to hide problems.
+- Never edit generated code in `src/generated/`; regenerate with `npm run db:generate`.
 - Avoid `any`. Prefer `unknown` and narrow with type guards or Zod parses.
 - Avoid unsafe assertions (`as T`) and non-null assertions (`!`) unless the invariant is documented and locally unavoidable.
 - Do not suppress compiler or lint errors with `@ts-ignore`, `@ts-expect-error`, or eslint disables without a short justification comment.

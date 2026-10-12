@@ -6,11 +6,11 @@ import { cn } from "@/lib/utils";
  * `relative` keeps absolutely-positioned sr-only text inside the clipped area.
  */
 export function TableContainer({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("scrollbar-thin relative overflow-x-auto", className)} {...props} />;
+  return <div className={cn("scrollbar-thin relative overflow-x-auto print:overflow-visible", className)} {...props} />;
 }
 
 export function Table({ className, ...props }: HTMLAttributes<HTMLTableElement>) {
-  return <table className={cn("w-full border-collapse text-[13px]", className)} {...props} />;
+  return <table className={cn("w-full border-collapse text-[13px] print:!min-w-0 print:text-[9px] print:[&_td]:whitespace-normal print:[&_th]:whitespace-normal", className)} {...props} />;
 }
 
 export function THead({ className, ...props }: HTMLAttributes<HTMLTableSectionElement>) {

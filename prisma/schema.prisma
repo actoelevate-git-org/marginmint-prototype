@@ -1,0 +1,149 @@
+// MarginMint persistence. Every table carries workspaceId; repositories must
+// always filter by it. Money is DECIMAL(14,2) with an explicit currency.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum MarketplaceProvider {
+  AMAZON
+  FLIPKART
+}
+
+enum ConnectionStatus {
+  CONNECTED
+  REAUTH_REQUIRED
+  DISCONNECTED
+}
+
+enum SyncStatus {
+  RUNNING
+  SUCCEEDED
+  PARTIAL
+  FAILED
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  RETURNED
+}
+
+model Workspace {
+  id          String                  @id
+  name        String
+  createdAt   DateTime                @default(now())
+  connections MarketplaceConnection[]
+  oauthStates OAuthState[]
+  orders      ExternalOrder[]
+  syncRuns    SyncRun[]
+}
+
+/// One authorised seller account per provider per workspace.
+/// Tokens are AES-256-GCM ciphertext (see src/lib/crypto/token-cipher.ts); never plaintext.
+model MarketplaceConnection {
+  id                    String              @id @default(cuid())
+  workspaceId           String
+  workspace             Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  provider              MarketplaceProvider
+  /// Amazon selling_partner_id; Flipkart does not return a seller id in the token response.
+  externalSellerId      String?
+  status                ConnectionStatus
+  refreshTokenEnc       String?
+  accessTokenEnc        String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  /// Provider-specific resumable sync position (validated with Zod on read).
+  syncState             Json?
+  connectedAt           DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  lastSyncAt            DateTime?
+  lastSyncStatus        SyncStatus?
+  /// Safe, user-facing summary only. Never raw provider payloads or tokens.
+  lastSyncMessage       String?
+
+  @@unique([workspaceId, provider])
+}
+
+/// Short-lived, single-use OAuth `state`. Only a SHA-256 hash is stored.
+model OAuthState {
+  id          String              @id @default(cuid())
+  workspaceId String
+  workspace   Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  provider    MarketplaceProvider
+  stateHash   String              @unique
+  expiresAt   DateTime
+  consumedAt  DateTime?
+  createdAt   DateTime            @default(now())
+
+  @@index([expiresAt])
+}
+
+/// Orders synchronised from a marketplace. Kept separate from demo data.
+/// No buyer name, email, phone or address is stored.
+model ExternalOrder {
+  id                String              @id @default(cuid())
+  workspaceId       String
+  workspace         Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  provider          MarketplaceProvider
+  externalOrderId   String
+  orderedAt         DateTime
+  providerUpdatedAt DateTime?
+  status            OrderStatus
+  /// Raw provider status, e.g. UNSHIPPED or READY_TO_DISPATCH.
+  providerStatus    String
+  fulfilledBy       String?
+  currency          String              @default("INR") @db.Char(3)
+  /// Item value after seller discounts, excluding tax and shipping. Null when the provider has not priced the order yet.
+  itemValue         Decimal?            @db.Decimal(14, 2)
+  discount          Decimal?            @db.Decimal(14, 2)
+  units             Int
+  firstSyncedAt     DateTime            @default(now())
+  lastSyncedAt      DateTime            @default(now())
+  items             ExternalOrderItem[]
+
+  @@unique([workspaceId, provider, externalOrderId])
+  @@index([workspaceId, orderedAt])
+  @@index([workspaceId, provider, status])
+}
+
+model ExternalOrderItem {
+  id             String        @id @default(cuid())
+  orderId        String
+  order          ExternalOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  externalItemId String
+  sku            String?
+  /// ASIN (Amazon) or FSN (Flipkart).
+  productRef     String?
+  title          String?
+  quantity       Int
+  unitPrice      Decimal?      @db.Decimal(14, 2)
+  lineValue      Decimal?      @db.Decimal(14, 2)
+  providerStatus String?
+
+  @@unique([orderId, externalItemId])
+}
+
+model SyncRun {
+  id            String              @id @default(cuid())
+  workspaceId   String
+  workspace     Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  provider      MarketplaceProvider
+  status        SyncStatus
+  startedAt     DateTime            @default(now())
+  finishedAt    DateTime?
+  ordersFetched Int                 @default(0)
+  ordersCreated Int                 @default(0)
+  ordersUpdated Int                 @default(0)
+  message       String?
+
+  @@index([workspaceId, provider, startedAt])
+}

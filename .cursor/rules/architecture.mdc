@@ -6,44 +6,45 @@ alwaysApply: false
 
 # Architecture
 
-Follow the repository’s actual framework and conventions once they exist. Until then, establish clear layers and do not invent a second architecture alongside the first.
+Next.js 15 App Router + TypeScript (strict). Follow the existing structure; do not invent a second architecture alongside it. Full map: `docs/03-architecture.md` and `docs/architecture/`.
 
-## Layers
+## Layers (dependencies point inward only)
 
-Keep these boundaries separate:
+| Layer | Folder | Responsibility |
+|-------|--------|----------------|
+| UI | `src/app/(app)`, `src/components` | Presentation, local UI state, accessibility, loading/empty/error states |
+| API routes | `src/app/api` | Validate request + origin, call one service, respond/redirect. No business logic |
+| Services | `src/services` | Use-cases; return **display-ready** models (formatted strings, chart numbers) |
+| Domain | `src/domain` | Financial formulas, insight rules. Pure functions, no I/O, fully tested |
+| Integration adapters | `src/integrations` | Marketplace HTTP/OAuth/payload mapping behind the `MarketplaceAdapter` port |
+| Repositories | `src/repositories` | Database access through the `IntegrationRepository` interface; always workspace-scoped |
+| Shared lib | `src/lib` | Dates (IST day keys), URL params, CSV, env, crypto, db client |
+| Internal docs portal | `src/internal`, `src/app/internal` | Renders docs/rules for the team; never imported by product code |
 
-| Layer | Responsibility |
-|-------|----------------|
-| UI | Presentation, local UI state, accessibility, loading/empty/error states |
-| Application / services | Use-cases, orchestration, authorization checks |
-| Domain | Financial formulas, inventory rules, matching policies |
-| Repositories | Persistence contracts; no business formulas |
-| Database | Prisma/SQL access only inside repositories (or designated data layer) |
-
-- UI must not contain authoritative financial calculations.
-- Repositories must not call UI or embed fee/profit formulas.
-- Prefer feature modules with clear public exports over deep cross-feature imports.
+- UI must not contain authoritative financial calculations; pages never add or subtract money.
+- All analytics read through `services/ledger.ts` so every page and report reconciles.
+- Repositories must not call UI or embed fee/profit formulas; services must not import Prisma directly.
+- Adapters must not touch the database; services talk to providers only through the port.
 
 ## Contracts and validation
 
-- Define typed service and repository interfaces (inputs/outputs explicit).
-- Share API request/response types between client and server where the stack allows; keep a single source of truth.
-- Centralize validation (e.g. Zod schemas) and map failures to consistent error shapes.
-- Validate all untrusted input on the server; client validation is UX only.
+- Typed service and repository interfaces with explicit inputs/outputs.
+- Zod at every trust boundary: URL params (`lib/search-params.ts`), env (`lib/env.ts`), provider responses (`integrations/*/schemas.ts`), forms and CSV rows.
+- Errors shown to users are allow-listed messages, never raw exception or provider text.
 
 ## Structure guidelines
 
-- Reuse shared UI primitives; keep feature-specific components inside the feature.
-- Avoid oversized components: split when a file mixes fetching, domain math, and dense presentation.
-- Avoid unnecessary abstraction (no generic “BaseManager” layers without a second real use).
-- Avoid circular dependencies; depend inward toward domain, not outward toward UI.
-- Use async safely: handle cancellation/race conditions on navigations; never leave unhandled rejections in services.
+- URL search params are the state for filters, sorting and pagination; server components by default, client components only for interactivity (charts, filters, toggles).
+- Reuse shared UI primitives in `src/components/ui`; feature components live in their feature folder.
+- Avoid oversized components; split when a file mixes fetching, domain math and dense presentation.
+- No generic abstractions without a second real use. No circular dependencies.
+- Bounded work in serverless handlers (page/time budgets) and resumable state for long jobs.
 
 ## Example boundary
 
 ```typescript
-// ✅ UI calls a service; service uses domain + repository
-const summary = await profitService.getWorkspaceSummary(workspaceId, range);
+// ✅ UI calls a service; service uses ledger + domain
+const model = getDashboardModel(filters);
 
 // ❌ UI computes contribution profit with raw JS numbers
 const profit = order.total - order.cogs - order.fees;

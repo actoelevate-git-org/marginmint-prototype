@@ -1,0 +1,35 @@
+---
+description: Product roadmap workflow — start, finish and tick steps only through the QA gate
+alwaysApply: true
+---
+
+# Roadmap & QA gate
+
+The product roadmap lives in `docs/roadmap/roadmap.json` (rendered at `/internal/roadmap` and `docs/roadmap/README.md`). Every feature, fix or chore that maps to a roadmap step must follow this workflow.
+
+## Before starting work
+
+1. Find the matching step (`npm run roadmap`). If none exists and the work is real product scope, add one with: id (`<Letter>-<NN>`), phase, title, detailed summary, `acceptance` criteria, `dependsOn`, `kind`, `tests` (planned test files) and `manualQa` (if UI or ops). New steps start as `pending` or `future`.
+2. Mark it in progress: `npm run roadmap:start -- <ID>`. It refuses if dependencies are unfinished or the step is blocked.
+
+## Finishing a step (the only way to tick ✅)
+
+1. Meet **every** acceptance criterion.
+2. Add or extend automated tests and list their files in the step's `tests`. Feature, UI, infra and security steps cannot be done without tests.
+3. Do the step's `manualQa` checks for real (e.g. desktop + true 400 px viewport, empty/loading/error states).
+4. Stop any running Next.js dev/start server for this project.
+5. Run the QA gate: `npm run roadmap:verify -- <ID> --qa "what you checked and the result"`.
+   It runs typecheck, lint, the full test suite (the step's own test files must pass), production build, and database tests if `requiresDb`. Only on success does it set `done` and record evidence (time, commit, checks, per-file test counts, QA notes).
+6. If the gate fails, fix the cause. **Never** weaken or skip tests, and never mark the step done another way.
+7. Choose the next step by priority: `npm run roadmap:next -- <ID>` (exactly one next pick).
+
+## Never
+
+- Never hand-edit a step to `done`, and never write or edit `evidence`. `npm test` fails on done steps without valid gate evidence.
+- Never claim a step is finished in chat, commits or PRs unless the gate passed.
+- Never remove steps to make progress look better. Mark them `future` or `blocked` with a `blockedReason` instead.
+- Never edit `docs/roadmap/README.md` by hand; run `npm run roadmap:render`.
+
+## Re-auditing
+
+After large refactors or dependency upgrades, re-verify everything already done: `npm run roadmap:verify -- --all-done --qa "..."`.

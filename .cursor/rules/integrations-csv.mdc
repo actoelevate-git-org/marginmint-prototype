@@ -14,6 +14,17 @@ alwaysApply: false
 - Never claim a connection is live unless authentication and the relevant operations have been verified in this environment.
 - Clearly distinguish **demo**, **imported**, and **synchronized** data in storage and UI.
 
+## As implemented
+
+- Port: `src/integrations/types.ts` (`MarketplaceAdapter`); adapters in `src/integrations/{amazon,flipkart}`; wiring in `src/services/integrations/registry.ts`.
+- Validate every provider response with Zod; on mismatch raise `ProviderError("bad_response")` and save nothing.
+- Use only the provider's current API version (Amazon Orders API `2026-01-01`, not deprecated v0). Never request buyer PII datasets.
+- Follow provider pagination URLs only on the configured host (prevents leaking bearer tokens).
+- Sync must be idempotent (unique external ids), resumable (cursor saved per page) and bounded (page/time budget).
+- Undocumented provider behaviour is isolated in the adapter and marked `VERIFY IN SANDBOX` until confirmed live.
+- Tests use fixtures shaped from the provider's published schema with a mocked `fetch`.
+- Adding a provider: follow `docs/07-marketplace-integrations.md` §7.10.
+
 ## CSV import
 
 - Validate headers, types, dates, currencies, and required fields before commit.

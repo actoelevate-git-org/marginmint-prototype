@@ -17,7 +17,7 @@ export function TopBar({
   dataStartDay: string;
 }) {
   return (
-    <header className="sticky top-0 z-30 border-b border-line bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/75">
+    <header className="sticky top-0 z-30 border-b border-line bg-white/90 print:hidden backdrop-blur supports-[backdrop-filter]:bg-white/75">
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2.5 px-4 py-2.5 lg:px-6">
         <div className="flex min-w-0 items-center gap-3">
           <MobileNav />
