@@ -42,6 +42,23 @@ Chart components receive plain `number`s (rupees) **for drawing only**. Axis lab
 
 ## 4.3 Profit formulas (`src/domain/finance.ts`)
 
+![4.3 Profit formulas (diagram)](diagrams/04-financial-logic-01.svg)
+
+<details>
+<summary>Diagram source (Mermaid): edit here, then run <code>npm run docs:diagrams</code></summary>
+
+```mermaid
+flowchart LR
+    g["Gross item sales"] -- "− discounts<br/>− cancelled value" --> ns["Net sales"]
+    ns -- "− COGS" --> gp["Gross profit"]
+    gp -- "− fees<br/>− shipping" --> cp["Contribution profit"]
+    cp -- "− advertising<br/>− return losses<br/>− other expenses" --> np["Net profit"]
+    np -- "÷ net sales × 100" --> m["Net margin %"]
+    miss{{"Any sold line missing unit cost?"}} -. "yes → everything below net sales is Unknown" .-> gp
+```
+
+</details>
+
 ```
 Net sales              = gross item sales − discounts − cancelled item value
 Gross profit           = net sales − COGS
@@ -66,6 +83,23 @@ Every result carries a **coverage** flag: `"estimated"` (management-accounting e
 | **When sales count** | On the order date (IST). Cancelled lines are removed through `cancelledItemValue`. Returned orders stay in net sales. |
 | **Returns** | Counted on the **return date**. Loss = refund + return shipping − cost of stock recovered into sellable inventory. Original COGS is not reversed separately, so recovered stock is the only credit and nothing is double-counted. |
 | **Return without known unit cost** | No recovery credit is taken (conservative). |
+
+![4.4 Accounting policies (diagram)](diagrams/04-financial-logic-02.svg)
+
+<details>
+<summary>Diagram source (Mermaid): edit here, then run <code>npm run docs:diagrams</code></summary>
+
+```mermaid
+flowchart LR
+    r["Return recorded<br/>(on return date)"] --> refund["+ refund to customer"]
+    r --> ship["+ return shipping"]
+    r --> q{"Stock recovered into<br/>sellable inventory?"}
+    q -- "yes, and unit cost known" --> credit["− unit cost × units"]
+    q -- "no, or cost unknown" --> none["no credit"]
+    refund & ship & credit & none --> loss["Refund & return loss"]
+```
+
+</details>
 | **Shipping allocation** | Order-level shipping is split across lines in proportion to line value, using the **largest-remainder** method (`allocateProportionally`) so the parts always add up to the exact paise total. |
 | **Advertising attribution** | To the campaign's product and marketplace. |
 | **Expenses with a marketplace** (e.g. Amazon storage fees) | Count toward that marketplace. |
@@ -103,6 +137,24 @@ The ledger is cached per dataset with a `WeakMap`, so it is built once per serve
 | **Settlement pending** | Expected proceeds for shipped/delivered orders not yet paid out, as of the last sync | None; shows count, oldest age, and how many differences are in review |
 
 ### Comparison rules (`percentChange`, `percentagePointChange`)
+
+![Comparison rules (diagram)](diagrams/04-financial-logic-03.svg)
+
+<details>
+<summary>Diagram source (Mermaid): edit here, then run <code>npm run docs:diagrams</code></summary>
+
+```mermaid
+flowchart TB
+    s(["KPI needs a comparison"]) --> h{"Does the previous period<br/>start inside recorded history?"}
+    h -- "no" --> nh["Show: No prior-period history"]
+    h -- "yes" --> k{"Is it the margin KPI?"}
+    k -- "yes" --> pp["Show change in percentage points<br/>(current − previous)"]
+    k -- "no" --> z{"Previous value = 0<br/>or unknown?"}
+    z -- "yes" --> nz["Show: Prior period was zero / unknown"]
+    z -- "no" --> pc["% change = (current − previous) ÷ |previous| × 100"]
+```
+
+</details>
 
 - % change = (current − previous) ÷ **|previous|** × 100. Using the absolute value keeps the direction truthful when the previous period was a loss: going from −₹100 to −₹50 shows **+50%** (an improvement).
 - If previous = 0 → **"Prior period was zero"**; no percentage is invented.

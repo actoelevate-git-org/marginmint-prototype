@@ -252,6 +252,36 @@ describe("order sync", () => {
     expect(repo.runs.at(-1)?.status).toBe("FAILED");
   });
 
+  it("asks the seller to reconnect when the token refresh is rejected as invalid_grant", async () => {
+    const adapter = fakeAdapter([{ orders: [], next: null, resumeFrom: null }], {
+      refreshAccessToken: vi.fn(async () => {
+        throw new ProviderError("unauthorized", 400, "amazon");
+      }),
+    });
+    await connect(repo, adapter);
+    const later = new Date(T0.getTime() + 2 * 3600_000); // access token expired → refresh needed
+    expect((await syncOrders(deps(adapter, { now: () => later }))).kind).toBe("reauth_required");
+    expect((await repo.getConnection(workspace.id, "AMAZON"))?.status).toBe("REAUTH_REQUIRED");
+    expect(adapter.fetchOrdersPage).not.toHaveBeenCalled();
+  });
+
+  it("works end-to-end with the real Amazon adapter when LWA rejects a revoked refresh token", async () => {
+    const { AmazonAdapter } = await import("@/integrations/amazon/adapter");
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({ error: "invalid_grant" }), { status: 400 }));
+    const adapter = new AmazonAdapter(
+      { appId: "a", clientId: "b", clientSecret: "c", redirectUri: "https://app.test/cb", draftApp: true },
+      fetchImpl,
+      async () => {},
+    ) as MarketplaceAdapter;
+    await repo.saveAuthorizedConnection({
+      workspaceId: workspace.id, provider: "AMAZON", externalSellerId: "A1",
+      refreshTokenEnc: encryptToken("revoked-refresh", key), accessTokenEnc: encryptToken("old", key),
+      accessTokenExpiresAt: new Date(T0.getTime() - 1000), refreshTokenExpiresAt: null,
+    });
+    expect((await syncOrders({ repo, adapter, encryptionKey: key, workspaceId: workspace.id, now: () => T0 })).kind).toBe("reauth_required");
+    expect((await repo.getConnection(workspace.id, "AMAZON"))?.status).toBe("REAUTH_REQUIRED");
+  });
+
   it("keeps progress when rate-limited mid-run", async () => {
     const adapter = fakeAdapter([
       { orders: [order("O1", [{}])], next: { page: 1 }, resumeFrom: null },

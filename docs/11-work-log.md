@@ -2,6 +2,27 @@
 
 A chronological record of what was built, what was found, and **why** each decision was made. Newest work is at the bottom.
 
+![11. Work log: everything done so far (diagram)](diagrams/11-work-log-01.svg)
+
+<details>
+<summary>Diagram source (Mermaid): edit here, then run <code>npm run docs:diagrams</code></summary>
+
+```mermaid
+%%{init: {'theme': 'neutral'}}%%
+timeline
+    title MarginMint build timeline
+    Stage 0 · Starting point : Inspected repo : Found 11 issues in the earlier draft
+    Stage 1 · Phase 1 UI : IST dates + new demo seed : Ledger + insight rules : 10 sections + 9 CSV reports : 57 tests
+    Stage 2 · Marketplace sync : Amazon Orders 2026-01-01 : Flipkart Shipments v3 : OAuth + encryption + sync engine : 101 tests
+    Stage 3 · Real database : Neon migrated : Batched saves (2.5 min → 1.8 s) : Timezone trap fixed : 102 + 4 DB tests
+    Stage 4 · Version control : Feature branch + commit : Pushed to GitHub
+    Stage 5 · Documentation : docs/ for onboarding : Architecture diagrams
+    Stage 6 · Audit + handbook : Rules updated, unused deps removed : /internal portal
+    Stage 7 · Roadmap + QA gate : 53 steps, 25 verified : Cursor rule ticks via gate
+```
+
+</details>
+
 ---
 
 ## Stage 0: Starting point
@@ -115,6 +136,33 @@ A chronological record of what was built, what was found, and **why** each decis
 ## Stage 5: Documentation
 
 - Created this `docs/` folder for onboarding new engineers.
+- Added `docs/architecture/` (10 pages, incl. the full product architecture) and rendered every Mermaid diagram to SVG (`npm run docs:diagrams`) so they display in VS Code and on GitHub.
+
+## Stage 6: Audit and the internal handbook
+
+- **Audited rules and docs.** Removed stale "once the code exists" wording from the rules; added the lessons learned (token encryption, OAuth state, raw-SQL timezone trap, provider response validation, mobile overflow fixes, Mermaid gotchas); added a `documentation.mdc` rule; normalised rule titles.
+- **Removed unused things:** `date-fns`, four unused Radix packages (`dropdown-menu`, `select`, `separator`, `tabs`) and `@eslint/eslintrc` (left over from the old ESLint config). Stopped tracking `tsconfig.tsbuildinfo` (a build cache) and gitignored it.
+- **Built `/internal`:** a handbook portal generated from `docs/`, `.cursor/rules/`, `AGENTS.md`, `README.md`, `MarginMint.md` and `.env.example`. It has searchable navigation, a table of contents, links between docs rewritten to portal pages, served diagrams, and an environment-variable table.
+- **Access:** open in development; in production 404 unless `INTERNAL_DOCS_PASSWORD` is set (then HTTP Basic). `noindex`, `no-store`. Covered by tests.
+
+## Stage 7: Product roadmap with QA-gated ticking
+
+- **`docs/roadmap/roadmap.json`:** 53 steps across 7 phases, each with a detailed summary, acceptance criteria, dependencies, test files and manual QA. Statuses: done, in progress, next pick, pending, blocked, future.
+- **QA gate** (`npm run roadmap:verify`): typecheck, lint, full tests with per-file results, build and DB tests; ticks only on success and records evidence. **Cursor rule** `roadmap.mdc` (always on) makes this the standard workflow.
+- **Honesty fix:** six built pages had no dedicated tests, so they could not be ticked under the new rule. Added `services/views.test.ts` (13 tests) first.
+- **Baseline audit:** ran the gate over all 25 built steps; every ✅ now carries evidence.
+- **Gate hardening:** the first run happened while a developer's `next dev` server was running, and the gate's build shares `.next` with it. The gate now refuses to run while any Next.js server for the project is running.
+- **`/internal/roadmap`:** progress, next pick / in progress / blocked, how ticking works, per-phase progress, expandable steps with evidence.
+
+## Stage 8: Report viewer and a full review
+
+- **Report viewer (C-12):** every report can be viewed on screen with summary figures, a chart, a sortable/paginated table with exact totals, definitions, CSV and print. Rows come from the same builder as the CSV.
+- **Review: hostile input.** Probed routes with malformed dates, injected values, path traversal, huge search strings and bad sort/page params; all handled. Hardened the order page against malformed URL encoding.
+- **Bug fixed (I-07):** a revoked token returns 400 `invalid_grant`, which showed "sync failed" forever. It now switches the connection to "Reconnect required" (tested end to end).
+- **Bug fixed:** a stale synced-orders link past the last page showed an empty table; it now shows the last page.
+- **Print:** wide report tables wrapped to fit the page instead of being cut off.
+- **Tooling:** `npm run lint` uses ESLint directly (`next lint` is deprecated and removed in Next 16); Vitest config moved to `.mts` (no more CommonJS warning); `.env.example` recommends `sslmode=verify-full`.
+- **Dependencies:** applied the non-breaking security patch (`sharp` 0.35.5). The remaining advisories need Next 16 / Tailwind 4, so they are tracked as roadmap step Q-06. They mostly affect build-time tooling, not the shipped app.
 
 ---
 

@@ -10,3 +10,6 @@ coverage
 
 # Prisma generated client
 src/generated
+
+# TypeScript incremental build cache
+*.tsbuildinfo

@@ -3,7 +3,7 @@ description: Database, authz, and security requirements for MarginMint
 alwaysApply: true
 ---
 
-# Database & Security (Critical)
+# Database & security (critical)
 
 ## Stack
 
@@ -29,7 +29,24 @@ alwaysApply: true
 - Protect against duplicate imports and repeated idempotent operations (idempotency keys / unique constraints).
 - Maintain audit logs for important financial and inventory mutations.
 
+## As implemented (Prisma 7 + Neon)
+
+- Schema `prisma/schema.prisma`, migrations committed in `prisma/migrations/`; never edit an applied migration.
+- App uses the pooled `DATABASE_URL`; migrations use `DIRECT_DATABASE_URL`. Use `sslmode=verify-full`.
+- The workspace always comes from the server (`getCurrentWorkspace()`), never from the request.
+- Raw SQL only through `Prisma.sql` / `Prisma.join`. Timestamp columns are `TIMESTAMP` without zone: pass `date.toISOString()` with `::timestamptz AT TIME ZONE 'UTC'`, never a raw JS `Date`.
+- Batch writes for sync pages (constant number of round trips); keep interactive transactions bounded.
+- Run `npm run test:db` after changing `prisma/` or `src/repositories/`.
+
+## Tokens and OAuth
+
+- Marketplace tokens are stored only as AES-256-GCM ciphertext (`src/lib/crypto/token-cipher.ts`); the key lives only in `TOKEN_ENCRYPTION_KEY`.
+- OAuth `state`: 256-bit random, stored as SHA-256 hash, 10-minute expiry, single use (atomic conditional update), bound to the browser via an httpOnly cookie.
+- State-changing routes are POST-only and must pass the same-origin check (`src/lib/http/request-guards.ts`).
+- Never log or display tokens, secrets or raw provider responses.
+
 ## Development hygiene
 
 - Do not weaken auth, RLS/workspace checks, or secret handling to make local development easier.
+- There is no app login yet: never configure real marketplace credentials on a publicly reachable deployment.
 - Handle auth failures explicitly; never catch-and-ignore authorization errors.

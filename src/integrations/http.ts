@@ -48,6 +48,17 @@ function classify(status: number): ProviderErrorKind {
   return "bad_request";
 }
 
+/** Reads only the standard OAuth `error` code from an error body (never the description). */
+async function oauthErrorCode(response: Response): Promise<string | null> {
+  try {
+    const body: unknown = await response.json();
+    if (body && typeof body === "object" && "error" in body && typeof body.error === "string") return body.error;
+  } catch {
+    // Not JSON: not an OAuth error response.
+  }
+  return null;
+}
+
 export async function requestJson(url: string, init: RequestInit, options: RequestOptions): Promise<unknown> {
   const fetchImpl = options.fetchImpl ?? fetch;
   const retries = options.retries ?? 3;
@@ -72,6 +83,11 @@ export async function requestJson(url: string, init: RequestInit, options: Reque
     if (RETRYABLE.has(response.status) && attempt < retries) {
       await sleep(retryDelayMs(response, attempt));
       continue;
+    }
+    // OAuth token endpoints answer a revoked/expired grant with 400 invalid_grant.
+    // That means the seller must reconnect, so classify it as unauthorized.
+    if (response.status === 400 && (await oauthErrorCode(response)) === "invalid_grant") {
+      throw new ProviderError("unauthorized", response.status, options.provider);
     }
     throw new ProviderError(classify(response.status), response.status, options.provider);
   }

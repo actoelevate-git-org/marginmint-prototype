@@ -10,6 +10,30 @@
 
 ## 9.2 Controls in place
 
+How the OAuth callback decides whether to trust a request:
+
+![9.2 Controls in place (diagram)](diagrams/09-security-01.svg)
+
+<details>
+<summary>Diagram source (Mermaid): edit here, then run <code>npm run docs:diagrams</code></summary>
+
+```mermaid
+flowchart TB
+    cb(["GET /api/integrations/{provider}/callback"]) --> c1{"state param present?"}
+    c1 -- "no" --> x1["invalid_request"]
+    c1 -- "yes" --> c2{"httpOnly cookie equals state?<br/>(constant-time)"}
+    c2 -- "no" --> x2["state_mismatch"]
+    c2 -- "yes" --> c3{"hash found, unused, not expired?<br/>(atomic consume)"}
+    c3 -- "no" --> x3["state_expired"]
+    c3 -- "yes" --> c4{"seller approved?<br/>(code present)"}
+    c4 -- "no" --> x4["denied"]
+    c4 -- "yes" --> c5{"token exchange OK<br/>and refresh token issued?"}
+    c5 -- "no" --> x5["token_exchange_failed"]
+    c5 -- "yes" --> ok["encrypt tokens · save connection<br/>connected"]
+```
+
+</details>
+
 | Threat | Control | Where |
 |--------|---------|-------|
 | Stolen database contents expose seller tokens | Tokens encrypted with **AES-256-GCM** (random 12-byte IV, auth tag; tampering fails). Key only in env. | `lib/crypto/token-cipher.ts` |
@@ -29,6 +53,7 @@
 | Secrets in git | `.env`, `.env.local`, `src/generated` gitignored; commits scanned before pushing | `.gitignore` |
 | Concurrent syncs corrupting state | A sync-run lock per connection | `tryStartSyncRun` |
 | Marketplace passwords | Never requested; only official OAuth consent flows | — |
+| Internal docs exposed publicly (they describe architecture and known gaps) | `/internal` is 404 in production unless `INTERNAL_DOCS_PASSWORD` is set, then HTTP Basic with constant-time compare; `noindex` + `no-store` | `src/middleware.ts`, `src/internal/access.ts` |
 
 ## 9.3 Secrets handling rules
 

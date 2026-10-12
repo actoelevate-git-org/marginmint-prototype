@@ -56,19 +56,12 @@ export async function listSyncedOrders(
   const from = new Date(`${args.range.startDay}T00:00:00.000+05:30`);
   const to = new Date(`${args.range.endDay}T23:59:59.999+05:30`);
   try {
-    const result = await repo.listOrders({
-      workspaceId,
-      providers,
-      from,
-      to,
-      status: args.status,
-      q: args.q,
-      sort: args.sort,
-      page: args.page,
-      pageSize: DEFAULT_PAGE_SIZE,
-    });
+    const query = { workspaceId, providers, from, to, status: args.status, q: args.q, sort: args.sort, pageSize: DEFAULT_PAGE_SIZE };
+    let result = await repo.listOrders({ ...query, page: args.page });
     const pageCount = Math.max(1, Math.ceil(result.total / DEFAULT_PAGE_SIZE));
     const page = Math.min(args.page, pageCount);
+    // A page past the end (stale link) shows the last real page instead of an empty table.
+    if (page !== args.page) result = await repo.listOrders({ ...query, page });
     const start = (page - 1) * DEFAULT_PAGE_SIZE;
     return {
       kind: "ok",

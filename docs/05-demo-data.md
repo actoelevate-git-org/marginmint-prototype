@@ -29,6 +29,30 @@ Tests enforce this:
 
 ## 5.4 What the seed produces
 
+![5.4 What the seed produces (diagram)](diagrams/05-demo-data-01.svg)
+
+<details>
+<summary>Diagram source (Mermaid): edit here, then run <code>npm run docs:diagrams</code></summary>
+
+```mermaid
+flowchart TB
+    rng["mulberry32 RNG<br/>seed 20261011"] --> loop["For each of 95 days up to 2026-10-11"]
+    cat["catalog.ts<br/>25 products · rate card"] --> loop
+    loop --> ord["1–3 orders/day<br/>product by demand weight · channel from its listings<br/>15% add a second item"]
+    ord --> st{"Order status by age"}
+    st -- "recent" --> early["Pending / Confirmed / Shipped"]
+    st -- "older" --> late["Delivered · ~5% Cancelled · ~12% Returned"]
+    late -- "Returned" --> ret["Return record 3–9 days later<br/>(T-shirt: extra quality returns)"]
+    ord --> set{"Settlement"}
+    set -- "within channel lag" --> await["Awaiting payout"]
+    set -- "past lag" --> paid["Order proceeds received<br/>~1 in 11 with a discrepancy"]
+    loop --> ads["Sponsored-product campaigns<br/>last 60 days · +40% in last 30"]
+    loop --> exp["Monthly expenses<br/>packaging · software · Amazon storage"]
+    cat --> stock["Stock on hand / reserved<br/>(low for 4 SKUs)"]
+```
+
+</details>
+
 | Records | Approx. count | How |
 |---------|---------------|-----|
 | Workspace | 1 | "Acme Commerce India", owner "Priya", INR |
@@ -50,6 +74,22 @@ Tests enforce this:
 | D2C | 2% (gateway) | ₹0 | ₹80 | 2 days | No |
 
 ## 5.5 Story beats built into the data
+
+![5.5 Story beats built into the data (diagram)](diagrams/05-demo-data-02.svg)
+
+<details>
+<summary>Diagram source (Mermaid): edit here, then run <code>npm run docs:diagrams</code></summary>
+
+```mermaid
+flowchart LR
+    stand["MM-104 Laptop Stand<br/>heavy Amazon ads, low ROAS"] --> i1["Insight: loses money after advertising"]
+    tee["MM-103 Cotton T-Shirt<br/>extra quality returns"] --> i2["Insight: high return rate"]
+    low["MM-101 · MM-107 · MM-118 · MM-120<br/>low stock + real sales velocity"] --> i3["Insight: stock-out risk"]
+    disc["Fee mismatches + rare overpayment"] --> i4["Insight: settlement differences"]
+    ramp["Ad spend +40% recently"] --> i5["Insight: ad spend outpacing sales<br/>(only if sales stayed flat)"]
+```
+
+</details>
 
 The seed is shaped so the insight rules have something real to find. These are properties of the **records**, not hardcoded outputs:
 

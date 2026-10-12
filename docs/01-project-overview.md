@@ -27,7 +27,7 @@ Indian sellers sell on Amazon, Flipkart, Shopify and their own websites (D2C). E
 | App shell, navigation, design system | ✅ Built | — |
 | Overview dashboard (KPIs, charts, insights) | ✅ Built | Demo data |
 | Profit Analytics, Products & Inventory, Settlements, Returns, Advertising, Reports | ✅ Built (read-only) | Demo data |
-| CSV exports (9 reports) | ✅ Built | Demo data |
+| Reports: on-screen viewer + CSV exports (9 reports) | ✅ Built | Demo data |
 | Amazon & Flipkart connect (OAuth) | ✅ Built, **not yet tested with real credentials** | Live marketplace |
 | Order sync into the Orders tab | ✅ Built | Live marketplace → Neon PostgreSQL |
 | Database (Prisma 7 + Neon) | ✅ Built, migration applied to the dev database | — |
@@ -45,15 +45,73 @@ There are **two separate data worlds** in the app today:
 
 They are deliberately **never mixed** in one list. Connecting synced data to the dashboard is the next big piece of work (see [Roadmap](12-known-gaps-and-roadmap.md)).
 
+![The most important thing to understand (diagram)](diagrams/01-project-overview-01.svg)
+
+<details>
+<summary>Diagram source (Mermaid): edit here, then run <code>npm run docs:diagrams</code></summary>
+
+```mermaid
+flowchart LR
+    subgraph demo["Demo world (simulated)"]
+        seed["Seeded demo dataset<br/>src/data/demo"] --> ledger["Ledger + domain formulas"]
+        ledger --> analytics["Overview · Profit Analytics · Products<br/>Settlements · Returns · Advertising · Reports"]
+        ledger --> demoOrders["Orders tab: Demo data"]
+    end
+    subgraph real["Synced world (real)"]
+        mkt["Amazon · Flipkart"] -- "OAuth + sync" --> db[("Neon PostgreSQL")]
+        db --> syncedOrders["Orders tab: Synced from marketplaces"]
+        db --> integ["Integrations page status"]
+    end
+    analytics -. "not connected yet (roadmap)" .- db
+```
+
+</details>
+
 ## 1.4 The ten sections of the app
 
 All ten sidebar links open a working page. Routes live in `src/app/(app)/`.
+
+![1.4 The ten sections of the app (diagram)](diagrams/01-project-overview-02.svg)
+
+<details>
+<summary>Diagram source (Mermaid): edit here, then run <code>npm run docs:diagrams</code></summary>
+
+```mermaid
+flowchart LR
+    subgraph analyse["Analyse"]
+        ov["Overview"]
+        pa["Profit Analytics"]
+        rp["Reports (CSV)"]
+    end
+    subgraph operate["Operate"]
+        or["Orders"]
+        pi["Products & Inventory"]
+        st["Settlements"]
+        re["Returns"]
+        ad["Advertising"]
+    end
+    subgraph workspace["Workspace"]
+        in["Integrations"]
+        se["Settings"]
+    end
+    ov -- "insight: loses money after ads" --> pa
+    ov -- "insight: stock-out risk" --> pi
+    ov -- "insight: high return rate" --> re
+    ov -- "insight: settlement differences" --> st
+    ov -- "insight: ad spend up, sales flat" --> ad
+    pa -- "export" --> rp
+    in -- "synced orders" --> or
+```
+
+</details>
+
+*Typical seller journey: start on Overview, follow a "Needs your attention" insight to the page that explains it, export what you need.*
 
 | Section | Route | What it shows | Filters |
 |---------|-------|---------------|---------|
 | Overview | `/overview` | 6 KPI cards, revenue vs profit chart, profit waterfall, marketplace comparison, "Needs your attention" insights | Date + marketplace |
 | Profit Analytics | `/profitability` | Per-product profit with every cost column, sortable, reconciles to the workspace total | Date + marketplace |
-| Reports | `/reports` | 9 CSV reports with row counts and metric definitions | Date + marketplace |
+| Reports | `/reports`, `/reports/[report]` | 9 reports: view on screen (summary figures, chart, sortable/paginated table with totals, definitions, print) or download as CSV | Date + marketplace |
 | Orders | `/orders`, `/orders/[orderId]` | Demo **or** synced orders; status tabs, search, sort, pagination; order detail page (demo) | Date + marketplace |
 | Products & Inventory | `/products` | Stock, inventory value, unit contribution, days of cover, low-stock view | None (stock is a snapshot) |
 | Settlements | `/settlements` | Expected vs received payouts, differences, review status | Date + marketplace |

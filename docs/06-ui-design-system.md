@@ -25,6 +25,29 @@
 
 ## 6.2 Layout
 
+![6.2 Layout (diagram)](diagrams/06-ui-design-system-01.svg)
+
+<details>
+<summary>Diagram source (Mermaid): edit here, then run <code>npm run docs:diagrams</code></summary>
+
+```mermaid
+flowchart LR
+    subgraph shell["AppShell"]
+        direction LR
+        side["Sidebar (desktop)<br/>Analyse · Operate · Workspace<br/>Demo workspace note"]
+        subgraph mainCol["Main column"]
+            direction TB
+            top["Top bar (sticky)<br/>workspace · demo badge · last data time · global filters"]
+            header["PageHeader<br/>title · description · actions (e.g. Export CSV)"]
+            content["Content<br/>StatGrid / KpiGrid → Cards → Tables / Charts"]
+            top --> header --> content
+        end
+        side --- mainCol
+    end
+```
+
+</details>
+
 - **Desktop (≥ 1024 px):** fixed 240 px dark-green sidebar, grouped as *Analyse*, *Operate* and *Workspace*.
 - **Below 1024 px:** a hamburger opens the same navigation in a slide-in sheet (`MobileNav` + Radix Dialog).
 - **Top bar (sticky):** workspace name, "Demo workspace" badge with an explanatory tooltip, "Demo data as of … IST", and the **global filters** (only on pages where they apply; see `NAV_ITEMS[].filters` in `lib/navigation.ts`).
@@ -32,6 +55,27 @@
 - **Phones (400 px):** verified with true device emulation. No page scrolls sideways; wide tables scroll **inside** their card.
 
 ### Global filters (`components/layout/global-filters.tsx`)
+
+![Global filters (diagram)](diagrams/06-ui-design-system-02.svg)
+
+<details>
+<summary>Diagram source (Mermaid): edit here, then run <code>npm run docs:diagrams</code></summary>
+
+```mermaid
+sequenceDiagram
+    actor U as User
+    participant F as GlobalFilters (client)
+    participant R as Next.js router
+    participant S as Server page
+    U->>F: click 7D or choose Amazon
+    F->>R: router.push(?range=7d&marketplace=AMAZON) · page param removed
+    F-->>U: spinner (useTransition)
+    R->>S: re-render with new searchParams
+    S-->>U: updated KPIs, charts, tables
+    Note over U,S: Sidebar links keep range/start/end/marketplace when switching sections
+```
+
+</details>
 
 - Date range: **Today / 7D / 30D / 90D / Custom** (a popover with two date inputs, validated: start ≤ end, end ≤ today).
 - Marketplace: All / Amazon India / Flipkart / Shopify / D2C website.

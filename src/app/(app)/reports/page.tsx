@@ -1,4 +1,5 @@
-import { CalendarRange, Download, Store } from "lucide-react";
+import { ArrowRight, CalendarRange, Download, Store } from "lucide-react";
+import Link from "next/link";
 import type { Metadata } from "next";
 import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -21,7 +22,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
     <div className="space-y-5">
       <PageHeader
         title="Reports"
-        description="Every report is generated from the same ledger and domain formulas as the dashboard, so totals agree across pages. Use the filters above to change the period and channel."
+        description="View any report on screen with a chart, sortable table and totals, or download it as CSV. Every report uses the same ledger and formulas as the dashboard, so totals agree across pages. Use the filters above to change the period and channel."
       />
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {REPORTS.map((report) => {
@@ -41,17 +42,23 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
                   {report.filtered.marketplace ? marketplaceFilterLabel(filters.marketplace) : "All marketplaces"}
                 </span>
               </div>
-              <div className="mt-auto flex items-center justify-between gap-2 pt-4">
+              <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-4">
                 <span className="num text-xs text-muted">{rows === 0 ? "No rows for this selection" : `${rows} rows`}</span>
-                <a
-                  href={`/api/reports/${report.id}?${query}`}
-                  download
-                  className={buttonVariants({ variant: "secondary", size: "sm" })}
-                  aria-label={`Download ${report.title} as CSV`}
-                >
-                  <Download aria-hidden="true" />
-                  CSV
-                </a>
+                <div className="flex gap-2">
+                  <a
+                    href={`/api/reports/${report.id}?${query}`}
+                    download
+                    className={buttonVariants({ variant: "secondary", size: "sm" })}
+                    aria-label={`Download ${report.title} as CSV`}
+                  >
+                    <Download aria-hidden="true" />
+                    CSV
+                  </a>
+                  <Link href={`/reports/${report.id}?${query}`} className={buttonVariants({ variant: "default", size: "sm" })} aria-label={`View ${report.title}`}>
+                    View report
+                    <ArrowRight aria-hidden="true" />
+                  </Link>
+                </div>
               </div>
             </Card>
           );

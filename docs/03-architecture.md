@@ -1,8 +1,15 @@
 # 3. Architecture
 
+> Detailed diagrams for every part of the system are in [`architecture/`](architecture/README.md).
+
 ## 3.1 Layers
 
 The code is split into layers that depend **inward only**. Outer layers may import inner ones; inner layers never import outer ones.
+
+![3.1 Layers (diagram)](diagrams/03-architecture-01.svg)
+
+<details>
+<summary>Diagram source (Mermaid): edit here, then run <code>npm run docs:diagrams</code></summary>
 
 ```mermaid
 flowchart TD
@@ -22,6 +29,8 @@ flowchart TD
     REPO --> DATA
     INT --> DATA
 ```
+
+</details>
 
 | Layer | Folder | Responsibility | Must NOT |
 |-------|--------|----------------|----------|
@@ -117,6 +126,11 @@ src/
 
 ## 3.3 How a page request flows (example: Overview)
 
+![3.3 How a page request flows (diagram)](diagrams/03-architecture-02.svg)
+
+<details>
+<summary>Diagram source (Mermaid): edit here, then run <code>npm run docs:diagrams</code></summary>
+
 ```mermaid
 sequenceDiagram
     participant B as Browser
@@ -135,8 +149,10 @@ sequenceDiagram
     L->>D: computeProfitBreakdown(...)
     S->>D: generateInsights(product + workspace signals)
     S-->>P: DashboardModel (formatted strings + chart numbers)
-    P-->>B: HTML (server-rendered); charts hydrate on the client
+    P-->>B: HTML (server-rendered) · charts hydrate on the client
 ```
+
+</details>
 
 Key points:
 - **URL is the state.** Filters live in the query string (`range`, `start`, `end`, `marketplace`, `status`, `q`, `sort`, `dir`, `page`). Links are shareable, the back button works, and pages work without JavaScript.
@@ -144,6 +160,11 @@ Key points:
 - **Only charts and a few controls are client components** (`"use client"`). Everything else renders on the server.
 
 ## 3.4 How marketplace sync flows
+
+![3.4 How marketplace sync flows (diagram)](diagrams/03-architecture-03.svg)
+
+<details>
+<summary>Diagram source (Mermaid): edit here, then run <code>npm run docs:diagrams</code></summary>
 
 ```mermaid
 sequenceDiagram
@@ -178,6 +199,8 @@ sequenceDiagram
     SY->>DB: batch upsert page, save cursor
     R-->>U: 303 → /integrations?result=sync_completed
 ```
+
+</details>
 
 Full details in [Marketplace integrations](07-marketplace-integrations.md).
 

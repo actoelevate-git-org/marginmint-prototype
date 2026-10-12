@@ -4,7 +4,7 @@ globs: "**/*.{tsx,jsx,css,scss}"
 alwaysApply: false
 ---
 
-# UI / UX — MarginMint
+# UI & UX
 
 ## Visual identity
 
@@ -27,6 +27,14 @@ alwaysApply: false
 - Prefer skeletons where they improve perceived loading for dashboards and tables.
 - Add tooltips for unfamiliar financial terminology (contribution profit, settlement difference, COGS, etc.).
 - Provide useful confirmation and validation feedback on destructive or irreversible actions.
+
+## Implementation conventions
+
+- Tokens live in `tailwind.config.ts`; primitives in `src/components/ui` (Button, Card, Table, SortHeader, Pagination, TabLinks, StatusBadge, InfoTooltip, EmptyState…). Reuse them.
+- Grid/flex children that contain charts or tables need `min-w-0`; wide tables scroll inside `TableContainer`.
+- Status = icon + text; negative money also carries a minus sign.
+- Multi-series charts: one y-axis, legend, hover tooltip and a table view; unknown values are gaps, not zeros. Chart colours come from `components/charts/chart-theme.ts`.
+- Filters, sorting and pagination live in the URL so links are shareable and pages work without JS.
 
 ## Data and interactions
 

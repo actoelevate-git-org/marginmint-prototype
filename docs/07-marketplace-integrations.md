@@ -11,6 +11,23 @@
 
 No buyer names, emails, phone numbers or addresses are requested or stored.
 
+![7.1 What it does (diagram)](diagrams/07-marketplace-integrations-01.svg)
+
+<details>
+<summary>Diagram source (Mermaid): edit here, then run <code>npm run docs:diagrams</code></summary>
+
+```mermaid
+flowchart LR
+    a["Integrations page<br/>Connect"] --> b["Marketplace consent page<br/>seller approves"]
+    b --> c["Callback<br/>tokens encrypted + saved"]
+    c --> d["Sync orders now"]
+    d --> e[("Neon<br/>ExternalOrder")]
+    e --> f["Orders tab<br/>Synced from marketplaces"]
+    d -. "8 pages / 8 s per run, resumable" .-> d
+```
+
+</details>
+
 ## 7.2 Code map
 
 | File | Role |
@@ -194,6 +211,26 @@ Why each protection exists:
 ## 7.8 What the user sees
 
 **Integrations page: marketplace card states**
+
+![7.8 What the user sees (diagram)](diagrams/07-marketplace-integrations-02.svg)
+
+<details>
+<summary>Diagram source (Mermaid): edit here, then run <code>npm run docs:diagrams</code></summary>
+
+```mermaid
+flowchart TB
+    start(("start")) -- "env vars missing" --> nc["Not configured"]
+    start -- "DB unreachable" --> du["Database unavailable"]
+    nc -- "env vars set" --> nconn["Not connected"]
+    nconn -- "Connect + approve" --> conn["Connected"]
+    conn -- "Sync orders now" --> conn
+    conn -- "provider returns 401 / 403" --> rr["Reconnect required"]
+    rr -- "Reconnect" --> conn
+    conn -- "Disconnect (confirmed)" --> dis["Disconnected<br/>(orders kept)"]
+    dis -- "Connect again" --> conn
+```
+
+</details>
 
 | State | Shown when | Actions |
 |-------|-----------|---------|

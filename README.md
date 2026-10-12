@@ -11,6 +11,8 @@ npm test           # domain + service tests
 npm run typecheck && npm run lint && npm run build
 ```
 
+**Team handbook:** run the app and open http://localhost:3000/internal for all docs, architecture diagrams and coding rules (see `docs/` for the source files).
+
 All dashboard figures are derived from the seeded records in `src/data/demo/seed.ts` through `src/services/ledger.ts` and the formulas in `src/domain/finance.ts`. See `AGENTS.md` for architecture and Settings → Accounting policies in the app for metric definitions.
 
 ## Amazon & Flipkart order sync

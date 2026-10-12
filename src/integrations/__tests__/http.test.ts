@@ -25,6 +25,17 @@ describe("requestJson", () => {
     expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
 
+  it("treats an OAuth invalid_grant (revoked access) as unauthorized, other 400s as bad requests", async () => {
+    const revoked = vi.fn<FetchLike>().mockResolvedValue(json(400, { error: "invalid_grant", error_description: "refresh token revoked SECRET" }));
+    const e1 = await caught(requestJson("https://x.test", {}, { provider: "amazon", fetchImpl: revoked, sleep: noSleep }));
+    expect(e1?.kind).toBe("unauthorized");
+    expect(String(e1?.message)).not.toContain("SECRET");
+    const other = vi.fn<FetchLike>().mockResolvedValue(json(400, { error: "invalid_request" }));
+    expect((await caught(requestJson("https://x.test", {}, { provider: "amazon", fetchImpl: other, sleep: noSleep })))?.kind).toBe("bad_request");
+    const html = vi.fn<FetchLike>().mockResolvedValue(new Response("<html>bad</html>", { status: 400 }));
+    expect((await caught(requestJson("https://x.test", {}, { provider: "flipkart", fetchImpl: html, sleep: noSleep })))?.kind).toBe("bad_request");
+  });
+
   it("gives up after bounded retries on network failure", async () => {
     const fetchImpl = vi.fn<FetchLike>().mockRejectedValue(new TypeError("fetch failed"));
     const error = await caught(requestJson("https://x.test", {}, { provider: "flipkart", fetchImpl, sleep: noSleep, retries: 2 }));

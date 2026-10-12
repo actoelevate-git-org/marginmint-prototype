@@ -4,7 +4,7 @@ globs: "**/*.{test,spec}.{ts,tsx},**/tests/**,**/e2e/**,**/playwright/**"
 alwaysApply: false
 ---
 
-# Testing & Verification
+# Testing & verification
 
 ## What to test
 
@@ -22,6 +22,13 @@ alwaysApply: false
 - Fix root causes; do not suppress failures with skips or weaker assertions without documenting why.
 - Avoid tests that only mirror implementation details; assert business-observable behavior.
 - Update tests when business behavior changes; delete obsolete assertions rather than commenting them out.
+
+## Commands in this repo
+
+- `npm test` (unit/service, no network or DB) · `npm run test:db` (real PostgreSQL, opt-in) · `npm run typecheck` · `npm run lint` · `npm run build`.
+- Services are tested with `MemoryIntegrationRepository`; the Prisma repository with `*.db.test.ts`.
+- UI changes: verify desktop and a true 400 px viewport (DevTools device emulation, not window size); no page may scroll horizontally.
+- Playwright is not installed yet; do not claim E2E coverage.
 
 ## Reporting
 

@@ -1,5 +1,7 @@
 # 12. Known gaps & roadmap
 
+> **The live, authoritative tracker is [`roadmap/roadmap.json`](roadmap/README.md)** (also at `/internal/roadmap`). Every step there has a status, acceptance criteria and QA-gate evidence. This page explains the gaps in prose.
+
 ## 12.1 Known limitations today
 
 | # | Limitation | Impact |
@@ -21,8 +23,31 @@
 
 ## 12.2 Recommended next steps (in priority order)
 
+![12.2 Recommended next steps (diagram)](diagrams/12-known-gaps-and-roadmap-01.svg)
+
+<details>
+<summary>Diagram source (Mermaid): edit here, then run <code>npm run docs:diagrams</code></summary>
+
+```mermaid
+flowchart LR
+    auth["1 · Login & workspaces"] --> deploy(["Safe real deployment"])
+    live["2 · First live sync"] --> sched["3 · Scheduled sync"]
+    auth --> live
+    costs["4 · Products & costs in DB"] --> dash(["Dashboard on real data"])
+    fees["5 · Fees & settlements import"] --> dash
+    live --> fees
+    fees --> match["6 · Settlement matching workflow"]
+    costs --> imp["7 · CSV import"]
+    costs --> prod["8 · Product management"]
+    live --> shop["9 · Shopify adapter"]
+    auth --> e2e["10 · Playwright E2E"]
+    deploy --> harden["11 · Hardening"]
+```
+
+</details>
+
 1. **Authentication & workspaces.** Auth.js (Google sign-in is simplest); `Workspace`/`WorkspaceMember` tables; make `getCurrentWorkspace()` resolve the signed-in member's workspace and reject others. Unblocks real deployment.
-2. **First live sync.** Register the Amazon app (Draft), run the checklist, fix any differences; then the Flipkart sandbox.
+2. **First live sync.** Register the Amazon app (Draft), run the checklist, fix any differences ; then the Flipkart sandbox.
 3. **Scheduled sync.** A Netlify Scheduled Function calling the sync engine for each connected account (the engine is already resumable and lock-protected).
 4. **Move analytics to the database.** Persist products, costs, fees, settlements, returns and ads; point the ledger at the database so the dashboard uses real data. Keep the demo as a separate seeded workspace.
 5. **Fees and settlements from marketplaces.** Amazon Finances/Settlement reports, Flipkart payments, so real net profit and reconciliation work.

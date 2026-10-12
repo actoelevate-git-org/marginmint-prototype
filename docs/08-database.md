@@ -16,6 +16,11 @@
 
 ## 8.2 Tables
 
+![8.2 Tables (diagram)](diagrams/08-database-01.svg)
+
+<details>
+<summary>Diagram source (Mermaid): edit here, then run <code>npm run docs:diagrams</code></summary>
+
 ```mermaid
 erDiagram
     Workspace ||--o{ MarketplaceConnection : has
@@ -24,6 +29,8 @@ erDiagram
     Workspace ||--o{ SyncRun : has
     ExternalOrder ||--o{ ExternalOrderItem : contains
 ```
+
+</details>
 
 | Table | Purpose | Key constraints |
 |-------|---------|-----------------|
@@ -57,6 +64,22 @@ Two implementations:
 - `MemoryIntegrationRepository`: used by service tests. Same behaviour, no database.
 
 ## 8.4 Migrations
+
+![8.4 Migrations (diagram)](diagrams/08-database-02.svg)
+
+<details>
+<summary>Diagram source (Mermaid): edit here, then run <code>npm run docs:diagrams</code></summary>
+
+```mermaid
+flowchart LR
+    e["Edit prisma/schema.prisma"] --> d["npm run db:migrate:dev<br/>(creates prisma/migrations/NEW)"]
+    d --> g["prisma generate<br/>(src/generated/prisma)"]
+    g --> t["npm run typecheck · npm test · npm run test:db"]
+    t --> c["Commit schema + migration"]
+    c --> p["Deploy: npm run db:migrate<br/>(prisma migrate deploy, direct URL)"]
+```
+
+</details>
 
 ```bash
 npm run db:migrate        # apply pending migrations (safe for production)

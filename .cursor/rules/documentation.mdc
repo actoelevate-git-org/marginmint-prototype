@@ -1,0 +1,33 @@
+---
+description: Keeping MarginMint documentation, diagrams and the internal portal accurate
+globs: "docs/**,AGENTS.md,README.md,.cursor/rules/**,scripts/render-docs-diagrams.mjs,src/internal/**"
+alwaysApply: false
+---
+
+# Documentation
+
+Docs live in `docs/` (engineering guide), `docs/architecture/` (diagrams), `AGENTS.md` (short contributor guide) and `.cursor/rules/` (coding rules). The team reads them at `/internal`.
+
+## Keep them true
+
+- Update the matching doc in the same change as the code. Stale docs are bugs.
+- Describe what is built, not what is hoped for. Mark status explicitly: ✅ built · 🧪 built, untested live · 🔜 planned.
+- Never put secrets, real customer data or credentials in docs.
+- File paths and links must resolve; prefer linking to code over copying it.
+- Do not edit `MarginMint.md` (the product spec) without the product owner.
+
+## Diagrams
+
+- Write diagrams in Mermaid inside the doc; run `npm run docs:diagrams` (optionally with a file filter) to render SVGs into `docs/diagrams/` and embed them. Commit the SVGs.
+- Labels: no `;` in sequence-diagram messages, quote labels with special characters, use `<br/>` for line breaks.
+- Use text status tags (`[built]`, `[planned]`) inside diagrams; emoji do not render reliably in SVG text.
+- Large layered overviews: use `block-beta` with one full-width header row per layer.
+
+## Roadmap
+
+- `docs/roadmap/roadmap.json` is the source of truth for product status; follow `roadmap.mdc`. `docs/roadmap/README.md` is generated (`npm run roadmap:render`).
+
+## Internal portal
+
+- `/internal` reads these files at build time via `src/internal/content.ts`. Adding a doc under `docs/` or a rule under `.cursor/rules/` makes it appear automatically.
+- `/internal` is open in development; in production it returns 404 unless `INTERNAL_DOCS_PASSWORD` is set (HTTP Basic auth).
